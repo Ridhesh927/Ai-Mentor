@@ -6,6 +6,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider } from "./context/SidebarContext";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
+import "./i18n/index.js";
 import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(
