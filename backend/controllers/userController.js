@@ -278,8 +278,6 @@ const updateUserSettings = async (req, res) => {
 };
 
 const updateUserProfile = async (req, res) => {
-  console.log("REQ.FILE:", req.file);
-  console.log("REQ.BODY:", req.body);
 
   try {
     if (!req.user) {

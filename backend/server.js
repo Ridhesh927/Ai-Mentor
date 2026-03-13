@@ -22,6 +22,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.use(express.json());
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -29,9 +31,6 @@ app.use(
   })
 );
 
-app.use(express.json());
-
-// 🔥 Serve videos folder
 app.use(
   "/videos",
   express.static(path.join(__dirname, "videos"))
@@ -70,7 +69,7 @@ const startServer = async () => {
     // Sync database models
     await sequelize.sync({ alter: true });
     console.log("✅ Database models synced successfully");
-    
+
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
