@@ -1,6 +1,7 @@
 // backend/controller/userController.js
 import User from "../models/User.js";
 import CommunityPost from "../models/CommunityPost.js";
+import Notifications from"../models/Notification.js";
 import jwt from "jsonwebtoken";
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
@@ -480,6 +481,10 @@ const removePurchasedCourse = async (req, res) => {
       where: {  userId }
     });
     
+     await Notifications.destroy({
+      where: {  userId }
+    });
+
     //delete user
     await User.destroy({
       where: {id: userId}

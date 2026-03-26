@@ -60,6 +60,7 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [profilepopup, setProfilePopup] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const [showDeletePopup, setshowDeletePopup] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -370,35 +371,47 @@ export default function Settings() {
             {showDeletePopup && (
               <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 w-[420px] text-center shadow-xl">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 w-[520px] text-center shadow-xl">
                   <div className="mb-4 text-red-500 text-5xl">⚠</div>
 
                   <h2 className="text-xl font-bold mb-2 text-main">
-                    Delete Account?
+                    Delete Account ?
                   </h2>
 
                   <p className="text-muted mb-6 text-sm">
-                    This action will permanently delete your profile, courses,
-                    and progress. This cannot be undone.
+                    This action will permanently delete your profile, courses and progress. This cannot be undone.
                   </p>
 
-                  <div className="flex justify-center gap-4">
+                    <p className="text-sm text-muted mb-6">
+                        Please type <span className="font-bold text-red-500">DELETE</span> to confirm.
+                    </p>
+                    <input
+                                  type="text"
+                                  placeholder="Type DELETE here..."
+                                  value={confirmText}
+                                  onChange={(e) => setConfirmText(e.target.value)}
+                                  className="w-full h-[50px] px-4 pr-12 rounded-xl border border-border text-[16px] font-[Inter] focus:ring-2 focus:ring-primary focus:border-primary bg-input text-main mb-6" 
+                    />
+                    <div className="flex justify-center gap-25">
+                                <button
+                                 onClick={() => {setConfirmText(""),setshowDeletePopup(false)}}
+                                  className="px-6 py-2 border rounded-lg"
+                                >
+                                  Cancel
+                                </button>
 
-                    <button
-                      onClick={() => setshowDeletePopup(false)}
-                      className="px-6 py-2 border rounded-lg hover:bg-gray-200">
-                      Cancel
-                    </button>
-
-                    <button
-                      onClick={handleDeleteAccount}
-                      disabled={deleting}
-                      className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 "
-                    >
-                      {deleting ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-
+                                <button
+                                  onClick={handleDeleteAccount}
+                                  disabled={confirmText !== "DELETE" || deleting}
+                                  className={`text-white ${
+                                    confirmText === "DELETE"
+                                      ? "bg-red-500 hover:bg-red-700 h-[50px] px-6 rounded-xl from-primary to-primary hover:opacity-90 disabled:opacity-50"
+                                      : "h-[50px] px-6 rounded-xl bg-gradient-to-r from-primary to-primary hover:opacity-90 disabled:opacity-50"
+                                  }`}
+                                >
+                                  {deleting ? "Deleting..." : "Delete Account"}
+                                </button>
+                    </div>                                  
                 </div>
               </div>
             )}
