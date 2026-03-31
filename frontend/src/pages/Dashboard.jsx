@@ -543,21 +543,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="p-6 text-center text-muted">
-                    <p>
-                      {normalizedSearchQuery
-                        ? "No courses match your search."
-                        : "You haven't enrolled in any courses yet."}
-                    </p>
-                    <button
-                      className="mt-4 px-4 py-2 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600"
-                      onClick={handleBrowseCourses}
-                    >
-                      Browse Courses
-                    </button>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
 
