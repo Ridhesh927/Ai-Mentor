@@ -3,14 +3,14 @@ import { enrollments } from "../data/adminData";
 function EnrollmentsPage() {
   return (
     <>
-      <div className="border-b p-6 md:p-8 flex items-center justify-between" style={{ borderColor: "var(--neutral-100)" }}>
+      <div className="border-b border-border p-6 md:p-8 flex items-center justify-between">
         <h2 className="text-3xl font-semibold">All Enrollments</h2>
-        <button type="button" className="h-10 px-4 rounded-xl border" style={{ borderColor: "var(--neutral-100)" }}>Export Report</button>
+        <button type="button" className="h-10 px-4 rounded-xl border border-border hover:bg-canvas-alt transition-colors">Export Report</button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-215">
-          <thead className="text-left text-xs uppercase tracking-wider" style={{ color: "rgba(51,51,51,0.6)" }}>
-            <tr className="border-b" style={{ borderColor: "var(--neutral-100)" }}>
+          <thead className="text-left text-xs uppercase tracking-wider text-muted">
+            <tr className="border-b border-border">
               <th className="p-5">Student</th>
               <th>Course</th>
               <th>Date</th>
@@ -20,7 +20,7 @@ function EnrollmentsPage() {
           </thead>
           <tbody className="text-sm">
             {enrollments.map(([name, course, date, amount, status]) => (
-              <tr key={`${name}-${course}`} className="border-b" style={{ borderColor: "var(--neutral-100)" }}>
+              <tr key={`${name}-${course}`} className="border-b border-border">
                 <td className="p-5 font-medium">{name}</td>
                 <td>{course}</td>
                 <td>{date}</td>

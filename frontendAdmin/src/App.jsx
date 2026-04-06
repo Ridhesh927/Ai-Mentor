@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import AdminHeader from "./components/layout/AdminHeader";
+import Header from "./components/Header";
 import AdminSidebar from "./components/layout/AdminSidebar";
 import { PAGE_TITLES } from "./constants/adminNavigation";
 import CoursesPage from "./pages/CoursesPage";
@@ -18,19 +18,28 @@ const PAGE_COMPONENTS = {
 
 function App() {
   const [page, setPage] = useState("courses");
+  const [mobileNav, setMobileNav] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const title = useMemo(() => PAGE_TITLES[page] ?? PAGE_TITLES.dashboard, [page]);
   const CurrentPage = PAGE_COMPONENTS[page] ?? DashboardPage;
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]" style={{ backgroundColor: "var(--admin-bg)" }}>
-      <AdminSidebar page={page} onPageChange={setPage} />
+    <div className="min-h-screen bg-canvas-alt text-main">
+      <AdminSidebar
+        page={page}
+        onPageChange={setPage}
+        mobileOpen={mobileNav}
+        onMobileClose={() => setMobileNav(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((prev) => !prev)}
+      />
 
-      <main className="flex flex-col min-h-screen">
-        <AdminHeader title={title} />
+      <main className={`min-h-screen transition-all duration-300 ${sidebarCollapsed ? "lg:ml-24" : "lg:ml-80"}`}>
+        <Header title={title} onMenuClick={() => setMobileNav(true)} />
 
         <section className="p-4 md:p-8">
-          <div className="rounded-2xl bg-white border overflow-hidden" style={{ borderColor: "var(--neutral-100)", boxShadow: "0 2px 8px rgba(26,26,26,0.06)" }}>
+          <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-[0_2px_8px_rgba(26,26,26,0.06)]">
             <CurrentPage />
           </div>
         </section>
