@@ -20,18 +20,22 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const CertificatesPage = lazy(() => import("./pages/CertificatesPage"));
 const Success = lazy(() => import("./pages/Success"));
-
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import "./App.css";
 // Redirects from the root path based on authentication status.
 const RootRedirect = () => {
-  const { isAuthenticated } = useAuth();
-  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Redirect to onboarding if profile is incomplete
+  return <Navigate to={user?.isProfileComplete ? "/dashboard" : "/complete-profile"} replace />;
 };
 
 // Prevents authenticated users from accessing public-only pages like login/signup.
 const PublicRoutes = () => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Outlet />;
+  // Redirect to onboarding if profile is incomplete
+  return <Navigate to={user?.isProfileComplete ? "/dashboard" : "/complete-profile"} replace />;
 };
 
 const App = () => {
