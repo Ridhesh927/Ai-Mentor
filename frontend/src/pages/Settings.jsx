@@ -1,6 +1,7 @@
 // frontend/src/pages/Settings.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSidebar } from "../context/SidebarContext";
 import {
   User,
   Bell,
@@ -41,6 +42,8 @@ export default function Settings() {
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed } =
+    useSidebar();
   const [activeSetting, setActiveSetting] = useState("profile");
   const { user, updateUser, fetchUserProfile } = useAuth();
   const [formData, setFormData] = useState({
@@ -284,20 +287,26 @@ export default function Settings() {
         </aside>
 
         {/* Mobile Settings Tab Bar — visible only on small screens */}
-        <div className="lg:hidden flex overflow-x-auto gap-2 px-4 pt-3 pb-2 no-scrollbar">
+        <div className="lg:hidden flex overflow-x-auto gap-2 px-4 py-3 no-scrollbar bg-card border-b border-border">
           {NAV_KEYS.map((item) => {
             const IconComponent = item.icon;
             return (
               <button
-                onClick={() => setActiveSetting(item.key)}
+                onClick={() => {
+                  if (item.key === "delete_account") {
+                    setshowDeletePopup(true);
+                  } else {
+                    setActiveSetting(item.key);
+                  }
+                }}
                 key={item.key}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   activeSetting === item.key
                     ? "bg-teal-50 dark:bg-teal-900/20 text-[#00BEA5] border border-[#00BEA5]"
-                    : "bg-card text-muted border border-border hover:bg-canvas-alt"
+                    : "bg-canvas-alt text-muted border border-border hover:bg-card hover:text-main"
                 }`}
               >
-                <IconComponent className="w-4 h-4 text-[#00BEA5]" />
+                <IconComponent className="w-4 h-4 flex-shrink-0 text-[#00BEA5]" />
                 <span>{t(item.labelKey)}</span>
               </button>
             );
@@ -305,52 +314,15 @@ export default function Settings() {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 lg:mt-5 min-w-0">
-          {activeSetting === "profile" && (
-            <nav className="w-full">
-              {/* Header */}
-              <div className="mb-8">
-                <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
-                  {t("settings.profile.title")}
-                </h1>
-                <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
-                  {t("settings.profile.subtitle")}
-                </p>
-              </div>
-            </nav>
-          )}
-        </main>
-
-          {/* Mobile Settings Tab Bar — visible only on small screens */}
-          <div className="lg:hidden flex overflow-x-auto gap-2 px-4 pt-3 pb-2 no-scrollbar">
-            {NAV_KEYS.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <button
-                  onClick={() => setActiveSetting(item.key)}
-                  key={item.key}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeSetting === item.key
-                      ? "bg-teal-50 dark:bg-teal-900/20 text-[#00BEA5] border border-[#00BEA5]"
-                      : "bg-card text-muted border border-border hover:bg-canvas-alt"
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4 text-[#00BEA5]" />
-                  <span>{t(item.labelKey)}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Main Content */}
-          <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 lg:mt-5 min-w-0">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          <div className="max-w-3xl w-full">
             {activeSetting === "preferences" && (
               <div className="w-full">
-                <div className="mb-8">
-                  <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+                <div className="mb-6">
+                  <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                     {t("preferences.nav_title")}
                   </h1>
-                  <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                  <p className="text-[15px] text-muted font-[Inter]">
                     {t("preferences.settings_modal_subtitle")}
                   </p>
                 </div>
@@ -361,20 +333,20 @@ export default function Settings() {
             {activeSetting === "profile" && (
               <div className="w-full">
                 {/* Header */}
-                <div className="mb-8">
-                  <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+                <div className="mb-6">
+                  <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                     {t("settings.profile.title")}
                   </h1>
-                  <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                  <p className="text-[15px] text-muted font-[Inter]">
                     {t("settings.profile.subtitle")}
                   </p>
                 </div>
 
               {/* Settings Card */}
-              <div className="bg-card rounded-2xl sm:rounded-[24px] shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
-                <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8">
+              <div className="bg-card rounded-2xl shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
+                <div className="flex flex-col sm:flex-row gap-6 mb-8 sm:items-start">
                   {/* Avatar Section */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center self-center sm:self-auto sm:min-w-[160px]">
                     <div className="relative mb-6">
                       <img
                         src={
@@ -386,6 +358,10 @@ export default function Settings() {
                         }
                         alt="Profile"
                         className="w-32 h-32 rounded-full border-4 border-[rgba(255,135,89,0.65)] shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)]"
+                        onError={(e) => {
+                          const seed = encodeURIComponent(`${formData.firstName} ${formData.lastName}`.trim() || user?.name || "User");
+                          e.target.src = `https://api.dicebear.com/8.x/initials/svg?seed=${seed}`;
+                        }}
                       />
 
                       <label className="absolute bottom-2 right-2 w-10 h-10 bg-[#475569] rounded-full flex items-center justify-center cursor-pointer shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)]">
@@ -544,15 +520,15 @@ export default function Settings() {
 
           {activeSetting === "notifications" && (
             <div className="w-full">
-              <div className="mb-8">
-                <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+              <div className="mb-6">
+                <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                   {t("settings.notifications.title")}
                 </h1>
-                <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                <p className="text-[15px] text-muted font-[Inter]">
                   {t("settings.notifications.subtitle")}
                 </p>
               </div>
-              <div className="bg-card rounded-2xl sm:rounded-[24px] shadow p-4 sm:p-6 md:p-8">
+              <div className="bg-card rounded-2xl shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
                 <div className="space-y-6">
                   {[
                     {
@@ -578,7 +554,7 @@ export default function Settings() {
                   ].map((item) => (
                     <div
                       key={item.key}
-                      className="flex items-center justify-between gap-4"
+                      className="flex items-start sm:items-center justify-between gap-4 py-2"
                     >
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm sm:text-[16px] font-semibold text-main">
@@ -664,15 +640,15 @@ export default function Settings() {
 
           {activeSetting === "password_security" && (
             <div className="w-full">
-              <div className="mb-8">
-                <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+              <div className="mb-6">
+                <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                   {t("settings.security.title")}
                 </h1>
-                <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                <p className="text-[15px] text-muted font-[Inter]">
                   {t("settings.security.subtitle")}
                 </p>
               </div>
-              <div className="bg-card rounded-2xl sm:rounded-[24px] shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
+              <div className="bg-card rounded-2xl shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -887,15 +863,15 @@ export default function Settings() {
 
           {activeSetting === "appearance" && (
             <div className="w-full">
-              <div className="mb-8">
-                <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+              <div className="mb-6">
+                <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                   {t("settings.appearance.title")}
                 </h1>
-                <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                <p className="text-[15px] text-muted font-[Inter]">
                   {t("settings.appearance.subtitle")}
                 </p>
               </div>
-              <div className="bg-card rounded-2xl sm:rounded-[24px] shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
+              <div className="bg-card rounded-2xl shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-[16px] font-semibold text-main font-[Inter] mb-3">
@@ -945,15 +921,15 @@ export default function Settings() {
 
           {activeSetting === "language" && (
             <div className="w-full">
-              <div className="mb-8">
-                <h1 className="text-xl sm:text-2xl md:text-[30px] font-bold text-main font-[Inter] mb-2">
+              <div className="mb-6">
+                <h1 className="text-2xl md:text-[28px] font-bold text-main font-[Inter] mb-1.5">
                   {t("settings.language.title")}
                 </h1>
-                <p className="text-sm sm:text-[16px] text-muted font-[Inter]">
+                <p className="text-[15px] text-muted font-[Inter]">
                   {t("settings.language.subtitle")}
                 </p>
               </div>
-              <div className="bg-card rounded-2xl sm:rounded-[24px] shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
+              <div className="bg-card rounded-2xl shadow-[0_4px_6px_0_rgba(0,0,0,0.10),0_10px_15px_0_rgba(0,0,0,0.10)] p-4 sm:p-6 md:p-8">
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-[16px] font-semibold text-main font-[Inter] mb-3">
@@ -1129,6 +1105,7 @@ export default function Settings() {
               </div>
             </div>
           )}
+          </div>
         </main>
       </div>
     </>

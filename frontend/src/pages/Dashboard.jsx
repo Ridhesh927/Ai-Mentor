@@ -327,7 +327,11 @@ const Dashboard = () => {
 
   return (
     <main className="flex-1 overflow-x-hidden overflow-y-auto bg-canvas-alt p-6">
-      <Preferences mode="modal" onSuccess={() => { console.log('Preferences saved') }} />
+      <Preferences 
+        key={localStorage.getItem("token")} 
+        mode="modal" 
+        onSuccess={() => { console.log('Preferences saved') }} 
+      />
       <div className="max-w-7xl pt-16 mx-auto space-y-8">
             {/* Stats Cards */}
             <div className="grid grid-cols-1  sm:grid-cols-2 lg:grid-cols-4 gap-6">
