@@ -70,9 +70,9 @@ const App = () => {
           </Route>
         </Route>
 
-        {/* Other public routes */}
-        <Route path="/course-preview/:courseId" element={<CoursePreview />} />
-      </Routes>
+      {/* Other public routes */}
+      <Route path="/course-preview/:courseId" element={<CoursePreview />} />
+    </Routes>
     </Suspense>
   );
 };
