@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useSidebar } from "../context/SidebarContext";
 import { useTranslation } from "react-i18next";
 import {
   Search,
@@ -26,12 +25,11 @@ import Preferences from "../components/Preferences";
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed } = useSidebar();
   const [coursesData, setCoursesData] = useState({
     statsCards: [],
     allCourses: [],
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchQuery = "";
   const [loading, setLoading] = useState(true);
   const { user, fetchUserProfile } = useAuth();
   const navigate = useNavigate();
@@ -313,19 +311,6 @@ const Dashboard = () => {
 
   console.log("Final continueLearning:", continueLearning);
 
-  const schedule = [
-    {
-      title: "Machine Learning",
-      time: "10:00 AM - 11:30 AM",
-      color: "bg-blue-50 border-l-blue-500",
-    },
-    {
-      title: "React Development",
-      time: "2:00 PM - 3:30 PM",
-      color: "bg-green-50 border-l-green-500",
-    },
-  ];
-
   const handleBrowseCourses = () => {
     navigate("/courses", { state: { activeTab: "explore" } });
   };
@@ -342,7 +327,11 @@ const Dashboard = () => {
 
   return (
     <main className="flex-1 overflow-x-hidden overflow-y-auto bg-canvas-alt p-6">
-      <Preferences mode="modal" onSuccess={() => { console.log('Preferences saved') }} />
+      <Preferences 
+        key={localStorage.getItem("token")} 
+        mode="modal" 
+        onSuccess={() => { console.log('Preferences saved') }} 
+      />
       <div className="max-w-7xl pt-16 mx-auto space-y-8">
             {/* Stats Cards */}
             <div className="grid grid-cols-1  sm:grid-cols-2 lg:grid-cols-4 gap-6">
