@@ -5,7 +5,10 @@ import {
   getAdminProfile,
   deleteAdmin,
   logoutAdmin,
-  getAllEnrollments
+  getAllEnrollments,
+  getAllPayments,
+  getAllCourses,
+  getAllUsers
 } from "../controllers/adminController.js";
 import { protectAdmin, superAdminOnly } from "../middleware/adminAuthMiddleware.js";
 import { protect, admin } from "../middleware/authMiddleware.js";
@@ -23,6 +26,9 @@ router.get("/profile", protectAdmin, getAdminProfile);
 router.post("/logout", protectAdmin, logoutAdmin);
 router.delete("/:id", protectAdmin, superAdminOnly, deleteAdmin);
 router.get("/enrollments", protect, admin, getAllEnrollments);
+// router.get("/payments", protectAdmin, getAllPayments);
+// router.get("/courses", protectAdmin, getAllCourses);
+// router.get("/users", protectAdmin, getAllUsers);
 
 // User admin management via user-role based auth (shared with course/community admin APIs)
 router.get("/users", protect, admin, listUsersForAdmin);

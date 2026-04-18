@@ -557,9 +557,14 @@ const updateUserRoleByAdmin = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     const allowedRoles = ["user", "admin", "superAdmin"];
+    const requesterRole = req.user?.role;
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role value" });
+    }
+
+    if (!["admin", "superAdmin"].includes(requesterRole)) {
+      return res.status(403).json({ message: "Not authorized to update user roles" });
     }
 
     const targetUser = await User.findByPk(id);
@@ -567,6 +572,15 @@ const updateUserRoleByAdmin = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (requesterRole !== "superAdmin") {
+      if (role === "superAdmin") {
+        return res.status(403).json({ message: "Only superAdmin can assign superAdmin role" });
+      }
+
+      if (["admin", "superAdmin"].includes(targetUser.role)) {
+        return res.status(403).json({ message: "Only superAdmin can modify admin or superAdmin accounts" });
+      }
+    }
     targetUser.role = role;
     await targetUser.save();
 
@@ -607,6 +621,9 @@ const deleteUserByAdmin = async (req, res) => {
       return res.status(200).json({ message: "User deleted successfully" });
     });
   } catch (error) {
+    if (error.message === "USER_NOT_FOUND") {
+      return res.status(404).json({ message: "User not found" });
+    }
     console.error("ADMIN DELETE USER ERROR:", error.message);
     res.status(500).json({ message: "Server error" });
   }
