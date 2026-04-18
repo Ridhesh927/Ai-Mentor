@@ -593,16 +593,19 @@ const deleteUserByAdmin = async (req, res) => {
       return res.status(400).json({ message: "You cannot delete your own account from admin panel" });
     }
 
-    const targetUser = await User.findByPk(id);
-    if (!targetUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    await User.sequelize.transaction(async (transaction) => {
+      const targetUser = await User.findByPk(id, { transaction });
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-    await CommunityPost.destroy({ where: { userId: id } });
-    await Notifications.destroy({ where: { userId: id } });
-    await targetUser.destroy();
+      await CommunityPost.destroy({ where: { userId: id }, transaction });
+      await Notifications.destroy({ where: { userId: id }, transaction });
+      await report.destroy({ where: { reporterId: id }, transaction });
+      await targetUser.destroy({ transaction });
 
-    res.status(200).json({ message: "User deleted successfully" });
+      return res.status(200).json({ message: "User deleted successfully" });
+    });
   } catch (error) {
     console.error("ADMIN DELETE USER ERROR:", error.message);
     res.status(500).json({ message: "Server error" });
