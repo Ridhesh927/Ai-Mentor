@@ -610,34 +610,16 @@ const deleteUserByAdmin = async (req, res) => {
     await User.sequelize.transaction(async (transaction) => {
       const targetUser = await User.findByPk(id, { transaction });
       if (!targetUser) {
-        throw new Error("USER_NOT_FOUND");
+        return res.status(404).json({ message: "User not found" });
       }
-
-      const userPosts = await CommunityPost.findAll({
-        where: { userId: id },
-        attributes: ["id"],
-        transaction,
-      });
-      const postIds = userPosts.map((post) => post.id);
-
-      if (postIds.length > 0) {
-        await report.destroy({
-          where: { postId: postIds },
-          transaction,
-        });
-      }
-
-      await report.destroy({
-        where: { reporterId: id },
-        transaction,
-      });
 
       await CommunityPost.destroy({ where: { userId: id }, transaction });
       await Notifications.destroy({ where: { userId: id }, transaction });
+      await report.destroy({ where: { reporterId: id }, transaction });
       await targetUser.destroy({ transaction });
-    });
 
-    res.status(200).json({ message: "User deleted successfully" });
+      return res.status(200).json({ message: "User deleted successfully" });
+    });
   } catch (error) {
     if (error.message === "USER_NOT_FOUND") {
       return res.status(404).json({ message: "User not found" });
