@@ -42,7 +42,7 @@ const getCourseDiscussions = async (req, res) => {
     const posts = await CommunityPost.findAll({
       where: { type: "course", courseId: parseInt(courseId) },
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -76,7 +76,7 @@ const getGlobalDiscussions = async (req, res) => {
     const posts = await CommunityPost.findAll({
       where,
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -105,24 +105,6 @@ const createCommunityPost = async (req, res) => {
 
     const { type, courseId, courseName, category, content } = req.body;
 
-    if (!type || !content) {
-      return res
-        .status(400)
-        .json({ message: "Type and content are required" });
-    }
-
-    if (type === "course" && (!courseId || !courseName)) {
-      return res
-        .status(400)
-        .json({ message: "courseId and courseName are required for course posts" });
-    }
-
-    if (type === "global" && !category) {
-      return res
-        .status(400)
-        .json({ message: "Category is required for global posts" });
-    }
-
     const post = await CommunityPost.create({
       userId: req.user.id,
       type,
@@ -137,7 +119,7 @@ const createCommunityPost = async (req, res) => {
 
     const populated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -158,9 +140,6 @@ const editCommunityPost = async (req, res) => {
     }
 
     const { content } = req.body;
-    if (!content || !content.trim()) {
-      return res.status(400).json({ message: "Post content is required" });
-    }
 
     const post = await CommunityPost.findByPk(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
@@ -174,7 +153,7 @@ const editCommunityPost = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -242,7 +221,7 @@ const likeCommunityPost = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -284,7 +263,7 @@ const dislikeCommunityPost = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -305,9 +284,6 @@ const replyCommunityPost = async (req, res) => {
     }
 
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ message: "Reply text is required" });
-    }
 
     const post = await CommunityPost.findByPk(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
@@ -317,6 +293,8 @@ const replyCommunityPost = async (req, res) => {
       userId: req.user.id,
       userName: req.user.name,
       userAvatar: req.user.avatar_url || null,
+      isGoogleUser: req.user.isGoogleUser || !!req.user.googleId,
+      googleId: req.user.googleId || null,
       text,
       likes: [],
       dislikes: [],
@@ -340,7 +318,7 @@ const replyCommunityPost = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -361,7 +339,7 @@ const getAllCoursePosts = async (req, res) => {
     const posts = await CommunityPost.findAll({
       where: { type: "course" },
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -389,10 +367,6 @@ const reportContent = async (req, res) => {
     }
 
     const { replyId, reason, description } = req.body;
-
-    if (!reason) {
-      return res.status(400).json({ message: "Reason is required" });
-    }
 
     const post = await CommunityPost.findByPk(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
@@ -505,10 +479,6 @@ const moderateReport = async (req, res) => {
   try {
     const { action } = req.body;
 
-    if (!["hidden", "deleted", "dismissed"].includes(action)) {
-      return res.status(400).json({ message: "Invalid action. Use: hidden, deleted, or dismissed" });
-    }
-
     const report = await Report.findByPk(req.params.reportId);
     if (!report) return res.status(404).json({ message: "Report not found" });
 
@@ -608,9 +578,6 @@ const editReply = async (req, res) => {
     }
 
     const { text } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ message: "Reply text is required" });
-    }
 
     const post = await CommunityPost.findByPk(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
@@ -641,7 +608,7 @@ const editReply = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -685,7 +652,7 @@ const deleteReply = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 
@@ -730,7 +697,7 @@ const unhideContent = async (req, res) => {
 
     const updated = await CommunityPost.findByPk(post.id, {
       include: [
-        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url"] },
+        { model: User, as: "author", attributes: ["id", "name", "email", "avatar_url", "googleId"] },
       ],
     });
 

@@ -14,7 +14,8 @@
     "learning": "Learning",
     "watched": "Watched Videos",
     "admin": "Admin Panel",
-    "account": "Account"
+    "account": "Account",
+    "certificates": "Certificates"
   },
   "common": {
     "cancel": "Cancel",
@@ -36,7 +37,8 @@
       "password_security": "Password & Security",
       "appearance": "Appearance",
       "language": "Language",
-      "delete_account":"Delete My Account"
+      "contactus": "Contact Support",
+      "delete_account": "Delete My Account"
     },
     "profile": {
       "title": "Profile Settings",
@@ -89,6 +91,12 @@
       "subtitle": "Choose your preferred language for the interface",
       "interface_language": "Interface Language",
       "updated": "Language settings updated successfully!"
+    },
+    "contactus": {
+      "title": "Contact Support",
+      "subtitle": "We usually respond within 24 hours.",
+      "subject": "Subject",
+      "message": "Message"
     }
   },
   "dashboard": {
@@ -166,7 +174,47 @@
     "total_course": "Total course",
     "course_performance": "Course Performance",
     "no_courses": "No courses to display performance for.",
-    "progress_lessons": "Progress"
+    "progress_lessons": "Progress",
+    "welcome_back_user": "Welcome back, {{name}}!",
+    "analytics_subtitle": "Here's your learning progress and upcoming tasks",
+    "enrolled_courses": "Enrolled Courses",
+    "attendance_rate": "Attendance Rate",
+    "current_streak_label": "Current Streak",
+    "streak_days": "{{count}} day streak!",
+    "streak_days_plural": "{{count}} days streak!",
+    "achievements_unlocked": "Achievements unlocked",
+    "complete_to_earn": "Complete courses to earn",
+    "average_progress": "Average Progress",
+    "completed_lessons_count": "Completed Lessons",
+    "across_all_courses": "Across all courses",
+    "total_study_time_label": "Total Study Time",
+    "this_month": "This month",
+    "upcoming_tasks_count": "Upcoming Tasks",
+    "need_attention": "Need attention",
+    "my_courses_tab": "My Courses",
+    "calendar_tasks_tab": "Calendar & Tasks",
+    "browse_all_courses": "Browse All Courses",
+    "table_course": "Course",
+    "table_progress": "Progress",
+    "table_lessons": "Lessons",
+    "table_level": "Level",
+    "table_action": "Action",
+    "continue_btn": "Continue",
+    "no_courses_match": "No courses match your search",
+    "no_courses_enrolled": "No courses enrolled yet.",
+    "browse_courses_btn": "Browse Courses",
+    "tasks_for_date": "Tasks for {{date}}",
+    "add_task_placeholder": "Add a new task...",
+    "add_btn": "Add",
+    "legend_today": "Today",
+    "legend_all_completed": "All Tasks Completed",
+    "legend_tasks_pending": "Tasks Pending",
+    "legend_other_month": "Other Month",
+    "status_completed": "Completed",
+    "status_ongoing": "Ongoing",
+    "status_upcoming": "Upcoming",
+    "delete_task_confirm": "Are you sure you want to delete this task?",
+    "task_exists_error": "Task already exists for this date."
   },
   "discussions": {
     "title": "Discussions",
@@ -227,5 +275,54 @@
     "email": "Email",
     "password": "Password",
     "logout": "Logout"
+  },
+  "preferences": {
+    "nav_title": "Preferences",
+    "modal_title": "Personalise your experience",
+    "modal_subtitle": "Just 5 quick questions to get you started",
+    "settings_modal_subtitle": "Personalise your learning experience to match how you learn best.",
+    "save_continue": "Next →",
+    "save_changes": "Finish",
+    "save_success": "Preferences updated successfully",
+    "step_of": "{{current}} / {{total}}",
+    "next": "Next →",
+    "back": "← Back",
+    "finish": "Finish",
+    "skip_for_now": "Skip for now — I'll set this up later",
+    "questions": {
+      "learning_goal": "What is your main learning goal?",
+      "interested_topics": "Which topics interest you the most?",
+      "experience_level": "How much experience do you have?",
+      "weekly_commitment": "How many hours per week can you dedicate?",
+      "learning_style": "What is your preferred learning style?"
+    },
+    "hints": {
+      "select_one": "Select one option",
+      "select_multiple": "Select all that apply"
+    },
+    "options": {
+      "switch_careers": "Switch Careers",
+      "upskill_work": "Upskill at Work",
+      "personal_interest": "Personal Interest",
+      "get_certified": "Get Certified",
+      "ai": "Artificial Intelligence",
+      "web_dev": "Web Development",
+      "data_science": "Data Science",
+      "cloud": "Cloud Computing",
+      "cybersecurity": "Cybersecurity",
+      "mobile_apps": "Mobile Apps",
+      "beginner": "Complete Beginner",
+      "basics": "Some Basics",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "1_2_hours": "1–2 hours",
+      "3_5_hours": "3–5 hours",
+      "6_10_hours": "6–10 hours",
+      "10_plus_hours": "10+ hours",
+      "videos": "Video Lectures",
+      "projects": "Hands-on Projects",
+      "articles": "Reading Articles",
+      "live_classes": "Live Classes"
+    }
   }
 }

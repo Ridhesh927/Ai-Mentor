@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useSidebar } from "../context/SidebarContext";
 import { useTranslation } from "react-i18next";
 import {
   MessageCircle,
@@ -42,15 +41,21 @@ const getRelativeTime = (dateStr) => {
   return d.toLocaleDateString();
 };
 
-const Avatar = ({ src, name, size = "w-10 h-10" }) => {
-  const imgSrc =
-    src ||
-    `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(name || "User")}`;
+const Avatar = ({ src, name, size = "w-10 h-10", isGoogle, googleId }) => {
+  const isGoogleUser = isGoogle || !!googleId;
+  const fallback = isGoogleUser
+    ? `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(name || "User")}`
+    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E`;
+
   return (
     <img
-      src={imgSrc}
+      src={src || fallback}
       alt={name || "User"}
-      className={`${size} rounded-full object-cover shrink-0`}
+      className={`${size} rounded-full object-cover shrink-0 ${!src && !isGoogleUser ? 'p-1.5 bg-slate-100 dark:bg-slate-800 border border-border' : ''}`}
+      onError={(e) => {
+        e.target.src = fallback;
+        if (!isGoogleUser) e.target.className += " p-1.5 bg-slate-100 dark:bg-slate-800 border border-border";
+      }}
     />
   );
 };
@@ -87,7 +92,6 @@ const DiscussionsPage = () => {
   const getCategoryLabel = (cat) =>
     t(`discussions.${CATEGORY_KEY_MAP[cat]}`, cat);
   const { user } = useAuth();
-  const { sidebarCollapsed } = useSidebar();
   const token = localStorage.getItem("token");
 
   //top level state
@@ -307,6 +311,8 @@ const DiscussionsPage = () => {
     if (!res.ok) throw new Error();
     return res.json();
   };
+  const wrapperRef = useRef(null);
+  /* ───────── effects ───────── */
 
   // Report a post or reply
   const handleReport = async () => {
@@ -666,14 +672,27 @@ const DiscussionsPage = () => {
   useEffect(() => {
     if (selectedCourse) fetchPanelPosts(selectedCourse.courseId, panelSort);
   }, [selectedCourse, panelSort, fetchPanelPosts]);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setShowGuidelines(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  /* ───────── handlers ───────── */
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = () => {
       if (openDropdown) {
         setOpenDropdown(null);
       }
@@ -924,7 +943,7 @@ const DiscussionsPage = () => {
                             </div>
                           )}
                           <div className="flex items-start gap-3 mb-3">
-                            <Avatar src={post.author?.avatar_url} name={post.author?.name} />
+                            <Avatar src={post.author?.avatar_url} name={post.author?.name} isGoogle={post.author?.isGoogleUser} googleId={post.author?.googleId} />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-semibold text-main text-sm">
@@ -1102,7 +1121,7 @@ const DiscussionsPage = () => {
                             </div>
                           )}
                           <div className="flex items-start gap-3">
-                            <Avatar src={post.author?.avatar_url} name={post.author?.name} size="w-9 h-9" />
+                            <Avatar src={post.author?.avatar_url} name={post.author?.name} size="w-9 h-9" isGoogle={post.author?.isGoogleUser} googleId={post.author?.googleId} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1339,7 +1358,7 @@ const DiscussionsPage = () => {
                                       data-parent-post-id={post.id}
                                       className="flex items-start gap-2 group/panelreply"
                                     >
-                                      <Avatar src={r.userAvatar} name={r.userName} size="w-6 h-6" />
+                                      <Avatar src={r.userAvatar} name={r.userName} size="w-6 h-6" isGoogle={r.isGoogleUser} googleId={r.googleId} />
                                       <div className="flex-1">
                                         <div className="flex items-center gap-1">
                                           <span className="text-xs font-medium text-main">
@@ -1515,7 +1534,7 @@ const DiscussionsPage = () => {
                     {/* Close Button */}
                     <button
                       onClick={() => setShowWelcome(false)}
-                      className="absolute top-3 right-3 text-orange-300 hover:text-white transition-colors"
+                      className="absolute top-3 right-3 text-white hover:text-orange-300 transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -1535,22 +1554,16 @@ const DiscussionsPage = () => {
                           anything globally.
                         </p>
 
-                        <div className="relative group inline-block">
+                        <div ref={wrapperRef} className="relative inline-block">
                           <button
-                            onClick={() => setShowGuidelines(!showGuidelines)}
+                            onClick={() => setShowGuidelines((prev) => !prev)}
                             className="mt-2 text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
                           >
                             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                             Community Guidelines
                           </button>
 
-                          <div
-                            className={`
-              absolute left-0 top-full mt-2 md:w-96 w-60 bg-[#1E1E24] border border-orange-500/30 rounded-lg p-3
-              text-xs text-gray-300 shadow-lg z-50 transition-all duration-200
-              ${showGuidelines ? "opacity-100 visible" : "opacity-0 invisible"}
-            `}
-                          >
+                          <div className={`absolute left-0 top-full mt-2 md:w-96 w-60 bg-[#1E1E24] border border-orange-500/30 rounded-lg p-3 text-xs text-gray-300 shadow-lg z-50 transition-all duration-200 ${showGuidelines ? "opacity-100 visible" : "opacity-0 invisible"}`}>
                             <ul className="space-y-1">
                               <li>
                                 - Be respectful and courteous to all members.
@@ -1587,7 +1600,7 @@ const DiscussionsPage = () => {
                   className="bg-card border border-border rounded-xl p-5 shadow-sm"
                 >
                   <div className="flex items-start gap-3">
-                    <Avatar src={user?.avatar_url} name={user?.name} />
+                    <Avatar src={user?.avatar_url} name={user?.name} isGoogle={user?.isGoogleUser} googleId={user?.googleId} />
                     <textarea
                       value={globalContent}
                       onChange={(e) => {
@@ -1770,7 +1783,7 @@ const DiscussionsPage = () => {
                         )}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-start gap-3">
-                            <Avatar src={post.author?.avatar_url} name={post.author?.name} />
+                            <Avatar src={post.author?.avatar_url} name={post.author?.name} isGoogle={post.author?.isGoogleUser} googleId={post.author?.googleId} />
                             <div>
                               <div className="font-semibold text-main text-sm">
                                 {post.author?.name || "Unknown"}
@@ -1952,7 +1965,7 @@ const DiscussionsPage = () => {
                                     data-parent-post-id={post.id}
                                     className="flex items-start gap-2 group/reply"
                                   >
-                                    <Avatar src={r.userAvatar} name={r.userName} size="w-7 h-7" />
+                                    <Avatar src={r.userAvatar} name={r.userName} size="w-7 h-7" isGoogle={r.isGoogleUser} googleId={r.googleId} />
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2">
                                         <span className="text-xs font-medium text-main">
