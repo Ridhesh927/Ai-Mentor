@@ -2,19 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, LogOut, Menu, Search, Settings, ShieldCheck, User, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Themetoggle from "../components/common/ThemeToggle";
-
-const seedNotifications = [
-  { id: "n1", title: "New report submitted", message: "A comment was reported in community.", unread: true, time: "5m ago" },
-  { id: "n2", title: "Course published", message: "React Fundamentals was updated.", unread: true, time: "1h ago" },
-  { id: "n3", title: "Weekly digest", message: "New admin analytics are ready.", unread: false, time: "1d ago" },
-];
+import { callApi } from "../utils/api";
 
 const Header = ({ title, onMenuClick, searchQuery = "", onSearchChange }) => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [notifications, setNotifications] = useState(seedNotifications);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState("");
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
@@ -35,6 +32,43 @@ const Header = ({ title, onMenuClick, searchQuery = "", onSearchChange }) => {
   const effectiveSearchQuery =
     typeof onSearchChange === "function" ? searchQuery : internalSearchQuery;
 
+  const formatRelativeTime = (isoDate) => {
+    if (!isoDate) return "just now";
+    const now = Date.now();
+    const created = new Date(isoDate).getTime();
+    const diffMs = Math.max(0, now - created);
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diffMs < hour) {
+      const mins = Math.max(1, Math.floor(diffMs / minute));
+      return `${mins}m ago`;
+    }
+
+    if (diffMs < day) {
+      const hrs = Math.floor(diffMs / hour);
+      return `${hrs}h ago`;
+    }
+
+    const days = Math.floor(diffMs / day);
+    return `${days}d ago`;
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setNotifLoading(true);
+      const response = await callApi("/admin/notifications");
+      const list = Array.isArray(response?.data) ? response.data : [];
+      setNotifications(list);
+      setNotifError("");
+    } catch (error) {
+      setNotifError(error.message || "Unable to load notifications");
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -48,15 +82,39 @@ const Header = ({ title, onMenuClick, searchQuery = "", onSearchChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })));
+  useEffect(() => {
+    fetchNotifications();
+    const timer = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const markAllRead = async () => {
+    try {
+      await callApi("/admin/notifications/mark-all-read", { method: "PATCH" });
+      setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })));
+    } catch (error) {
+      setNotifError(error.message || "Unable to mark notifications as read");
+    }
   };
 
-  const clearAll = () => {
-    setNotifications([]);
+  const clearAll = async () => {
+    try {
+      await callApi("/admin/notifications/clear", { method: "DELETE" });
+      setNotifications([]);
+    } catch (error) {
+      setNotifError(error.message || "Unable to clear notifications");
+    }
   };
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
+    try {
+      if (notification.unread) {
+        await callApi(`/admin/notifications/${notification.id}/read`, { method: "PATCH" });
+      }
+    } catch (error) {
+      setNotifError(error.message || "Unable to update notification");
+    }
+
     setNotifications((prev) =>
       prev.map((item) => (item.id === notification.id ? { ...item, unread: false } : item))
     );
@@ -150,7 +208,20 @@ const Header = ({ title, onMenuClick, searchQuery = "", onSearchChange }) => {
                     </div>
                   </div>
                   <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
-                    {notifications.length > 0 ? (
+                    {notifLoading ? (
+                      <div className="p-8 text-center text-xs text-muted">Loading notifications...</div>
+                    ) : notifError ? (
+                      <div className="p-8 text-center">
+                        <p className="text-xs text-red-500">{notifError}</p>
+                        <button
+                          type="button"
+                          onClick={fetchNotifications}
+                          className="mt-3 h-8 px-3 rounded-lg border border-border text-xs hover:bg-canvas-alt"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    ) : notifications.length > 0 ? (
                       notifications.map((notification) => (
                         <button
                           key={notification.id}
@@ -162,7 +233,7 @@ const Header = ({ title, onMenuClick, searchQuery = "", onSearchChange }) => {
                         >
                           <p className="text-xs font-bold">{notification.title}</p>
                           <p className="text-xs text-muted mt-1">{notification.message}</p>
-                          <p className="text-[10px] text-muted mt-1">{notification.time}</p>
+                          <p className="text-[10px] text-muted mt-1">{formatRelativeTime(notification.createdAt)}</p>
                         </button>
                       ))
                     ) : (

@@ -27,7 +27,7 @@ const LoginPage = () => {
         throw new Error(data?.message || "Login failed");
       }
 
-      if (!data?.token || (data?.role !== "admin" && data?.role !== "superAdmin")) {
+      if (!data?.token || (data?.role !== "admin" && data?.role !== "superadmin")) {
         throw new Error("This account is not an admin account");
       }
 

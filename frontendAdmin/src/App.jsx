@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import AdminSidebar from "./components/layout/AdminSidebar";
 import { PAGE_TITLES } from "./constants/adminNavigation";
 import CoursesPage from "./pages/CoursesPage";
 import DashboardPage from "./pages/DashboardPage";
 import EnrollmentsPage from "./pages/EnrollmentsPage";
+import LoginPage from "./pages/LoginPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -17,12 +19,22 @@ const PAGE_COMPONENTS = {
 };
 
 function App() {
+  const location = useLocation();
+  const token = localStorage.getItem("token");
   const [page, setPage] = useState("courses");
   const [mobileNav, setMobileNav] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
   const title = useMemo(() => PAGE_TITLES[page] ?? PAGE_TITLES.dashboard, [page]);
   const CurrentPage = PAGE_COMPONENTS[page] ?? DashboardPage;
+  const isLoginRoute = location.pathname === "/login";
+
+  if (isLoginRoute) {
+    return <LoginPage />;
+  }
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-canvas-alt text-main">

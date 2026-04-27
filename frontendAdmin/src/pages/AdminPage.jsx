@@ -110,7 +110,7 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (token && user?.role === "admin" || user?.role === "superAdmin") fetchAll();
+    if (token && (user?.role === "admin" || user?.role === "superadmin")) fetchAll();
   }, []);
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function AdminPage() {
   }, []);
 
   if (!token) return <GateCard title="Admin login required" body="Please login first." />;
-  if (user?.role !== "admin" && user?.role !== "superAdmin") return <GateCard title="Access denied" body="Admin role is required for this panel." />;
+  if (user?.role !== "admin" && user?.role !== "superadmin") return <GateCard title="Access denied" body="Admin role is required for this panel." />;
 
   const enrollmentRows = users.flatMap((u) => (u.purchasedCourses || []).map((p) => {
     const course = courses.find((c) => Number(c.id) === Number(p.courseId));

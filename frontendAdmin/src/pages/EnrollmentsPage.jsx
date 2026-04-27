@@ -1,6 +1,34 @@
-import { enrollments } from "../data/adminData";
+import { useEffect, useState } from "react";
+import { callApi } from "../utils/api";
 
 function EnrollmentsPage() {
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchEnrollments = async () => {
+      try {
+        setLoading(true);
+        const response = await callApi("/admin/enrollments?type=list");
+        const enrollmentsList = Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response)
+            ? response
+            : [];
+        setEnrollments(enrollmentsList);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEnrollments();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center text-muted">Loading enrollments...</div>;
+  if (error) return <div className="p-10 text-center text-red-500">Error: {error}</div>;
+
   return (
     <>
       <div className="border-b border-border p-6 md:p-8 flex items-center justify-between">
@@ -19,15 +47,24 @@ function EnrollmentsPage() {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {enrollments.map(([name, course, date, amount, status]) => (
-              <tr key={`${name}-${course}`} className="border-b border-border">
-                <td className="p-5 font-medium">{name}</td>
-                <td>{course}</td>
-                <td>{date}</td>
-                <td className="font-semibold">{amount}</td>
-                <td className={status === "Completed" ? "text-green-600" : status === "Pending" ? "text-amber-500" : "text-red-600"}>{status}</td>
+            {enrollments.length > 0 ? (
+              enrollments.map((enrollment, index) => (
+                <tr key={`${enrollment.user}-${enrollment.course}-${index}`} className="border-b border-border hover:bg-canvas-alt transition-colors">
+                  <td className="p-5">
+                    <div className="font-medium">{enrollment.user}</div>
+                    <div className="text-xs text-muted">{enrollment.email}</div>
+                  </td>
+                  <td>{enrollment.course}</td>
+                  <td>{enrollment.date ? new Date(enrollment.date).toLocaleDateString() : "N/A"}</td>
+                  <td className="font-semibold">Rs {enrollment.amount}</td>
+                  <td className="text-green-600">Completed</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="p-10 text-center text-muted italic">No enrollments found.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -36,3 +73,4 @@ function EnrollmentsPage() {
 }
 
 export default EnrollmentsPage;
+
