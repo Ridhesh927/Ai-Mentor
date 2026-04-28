@@ -593,7 +593,8 @@ const CoursesPage = () => {
             </p>
             <div className="flex justify-between items-center mt-4">
               <span className="text-lg font-bold text-green-600">
-                ₹{selectedCourse.priceValue}              </span>
+                {selectedCourse.priceValue > 0 ? `₹${selectedCourse.priceValue}` : "Free"}
+              </span>
             </div>
             <button
               onClick={handleEnroll}
