@@ -37,5 +37,3 @@ export const superAdminOnly = (req, res, next) => {
     res.status(403).json({ message: "This action requires superadmin privileges" });
   }
 };
-
-export default Admin;

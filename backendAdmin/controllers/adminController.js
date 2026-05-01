@@ -112,7 +112,6 @@ const Course = sequelize.define(
   {
     timestamps: true,
     tableName: "Courses",
-    sync: { alter: false },
   }
 );
 
@@ -147,64 +146,75 @@ const AdminNotification = sequelize.define(
   }
 );
 
+let notificationSeedPromise = null;
+
 const ensureNotificationSeed = async () => {
-  await AdminNotification.sync();
-  const count = await AdminNotification.count();
-  if (count > 0) {
-    return;
-  }
+  if (!notificationSeedPromise) {
+    notificationSeedPromise = (async () => {
+      await AdminNotification.sync();
+      const count = await AdminNotification.count();
+      if (count > 0) {
+        return;
+      }
 
-  const [latestCourse, latestUser, latestAdmin] = await Promise.all([
-    Course.findOne({ attributes: ["title", "createdAt"], order: [["createdAt", "DESC"]] }),
-    User.findOne({ attributes: ["name", "createdAt"], order: [["createdAt", "DESC"]] }),
-    Admin.findOne({ attributes: ["name", "createdAt"], order: [["createdAt", "DESC"]] }),
-  ]);
+      const [latestCourse, latestUser, latestAdmin] = await Promise.all([
+        Course.findOne({ attributes: ["title", "createdAt"], order: [["createdAt", "DESC"]] }),
+        User.findOne({ attributes: ["name", "createdAt"], order: [["createdAt", "DESC"]] }),
+        Admin.findOne({ attributes: ["name", "createdAt"], order: [["createdAt", "DESC"]] }),
+      ]);
 
-  const seedRows = [];
+      const seedRows = [];
 
-  if (latestUser) {
-    seedRows.push({
-      title: "New user joined",
-      message: `${latestUser.name || "A user"} created a new account.`,
-      type: "user",
-      unread: true,
-      createdAt: latestUser.createdAt,
-      updatedAt: latestUser.createdAt,
+      if (latestUser) {
+        seedRows.push({
+          title: "New user joined",
+          message: `${latestUser.name || "A user"} created a new account.`,
+          type: "user",
+          unread: true,
+          createdAt: latestUser.createdAt,
+          updatedAt: latestUser.createdAt,
+        });
+      }
+
+      if (latestCourse) {
+        seedRows.push({
+          title: "Course update",
+          message: `${latestCourse.title || "A course"} is available in catalog.`,
+          type: "course",
+          unread: true,
+          createdAt: latestCourse.createdAt,
+          updatedAt: latestCourse.createdAt,
+        });
+      }
+
+      if (latestAdmin) {
+        seedRows.push({
+          title: "Admin activity",
+          message: `${latestAdmin.name || "An admin"} has admin access.`,
+          type: "admin",
+          unread: false,
+          createdAt: latestAdmin.createdAt,
+          updatedAt: latestAdmin.createdAt,
+        });
+      }
+
+      if (seedRows.length === 0) {
+        seedRows.push({
+          title: "Welcome",
+          message: "Notification center is now active.",
+          type: "system",
+          unread: false,
+        });
+      }
+
+      await AdminNotification.bulkCreate(seedRows);
+    })().catch((error) => {
+      notificationSeedPromise = null;
+      throw error;
     });
   }
 
-  if (latestCourse) {
-    seedRows.push({
-      title: "Course update",
-      message: `${latestCourse.title || "A course"} is available in catalog.`,
-      type: "course",
-      unread: true,
-      createdAt: latestCourse.createdAt,
-      updatedAt: latestCourse.createdAt,
-    });
-  }
-
-  if (latestAdmin) {
-    seedRows.push({
-      title: "Admin activity",
-      message: `${latestAdmin.name || "An admin"} has admin access.`,
-      type: "admin",
-      unread: false,
-      createdAt: latestAdmin.createdAt,
-      updatedAt: latestAdmin.createdAt,
-    });
-  }
-
-  if (seedRows.length === 0) {
-    seedRows.push({
-      title: "Welcome",
-      message: "Notification center is now active.",
-      type: "system",
-      unread: false,
-    });
-  }
-
-  await AdminNotification.bulkCreate(seedRows);
+  await notificationSeedPromise;
 };
 
 const generateToken = (id) => {

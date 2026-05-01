@@ -78,9 +78,4 @@ const App = () => {
   );
 };
 
-<<<<<<< HEAD
 export default App;
-
-=======
-export default App;
->>>>>>> 757ed198a4076c0e04a7a1259ebde0522289f433
