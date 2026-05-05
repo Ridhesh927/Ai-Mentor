@@ -16,6 +16,7 @@ import sidebarRoutes from "./routes/sidebarRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import communityRoutes from "./routes/communityRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import certificateRoutes from "./routes/certificateRoutes.js";
 import paymentRoutes from "./routes/payment.js";
 import preferenceRoutes from "./routes/preferenceRoutes.js";
@@ -40,7 +41,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [process.env.FRONTEND_URL || "http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   }),
 );
@@ -64,6 +65,7 @@ app.use("/api/sidebar", sidebarRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/certificate", certificateRoutes);
 app.use("/api/preferences", preferenceRoutes);
 app.use("/api/contactus", contactUsRoutes); // ✅ added route
