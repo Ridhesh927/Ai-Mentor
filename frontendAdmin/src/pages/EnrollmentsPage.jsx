@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { callApi } from "../utils/api";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import Papa from "papaparse";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -37,39 +38,41 @@ function EnrollmentsPage() {
     fetchEnrollments();
   }, []);
 
-  // Excel Export
-  const exportToExcel = () => {
-    const excelData = enrollments.map((enrollment) => ({
-      Student: enrollment.user,
-      Course: enrollment.course,
-      Date: enrollment.date
+ const exportToExcel = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Enrollments");
+
+  worksheet.columns = [
+    { header: "Student", key: "student", width: 20 },
+    { header: "Course", key: "course", width: 20 },
+    { header: "Date", key: "date", width: 15 },
+    { header: "Amount", key: "amount", width: 15 },
+    { header: "Status", key: "status", width: 15 },
+  ];
+
+  enrollments.forEach((enrollment) => {
+    worksheet.addRow({
+      student: enrollment.user,
+      course: enrollment.course,
+      date: enrollment.date
         ? new Date(enrollment.date).toLocaleDateString()
         : "N/A",
-      Amount: `Rs ${enrollment.amount}`,
-      Status: enrollment.status || "Completed",
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Enrollments"
-    );
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
+      amount: `Rs ${enrollment.amount}`,
+      status: enrollment.status || "Completed",
     });
+  });
 
-    const fileData = new Blob([excelBuffer], {
-      type: "application/octet-stream",
-    });
+  worksheet.getRow(1).font = { bold: true };
 
-    saveAs(fileData, "Enrollments_Report.xlsx");
-  };
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(blob, "Enrollments_Report.xlsx");
+};
 
   // PDF Export
   const exportToPDF = () => {
@@ -104,6 +107,27 @@ function EnrollmentsPage() {
     doc.save("Enrollments_Report.pdf");
   };
 
+  // CSV Export
+  const exportToCSV = () => {
+  const csv = Papa.unparse(
+    enrollments.map((e) => ({
+      Student: e.user,
+      Course: e.course,
+      Date: e.date
+        ? new Date(e.date).toLocaleDateString()
+        : "N/A",
+      Amount: `Rs ${e.amount}`,
+      Status: e.status || "Completed",
+    }))
+  );
+
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  saveAs(blob, "Enrollments_Report.csv");
+}
+
   if (loading)
     return (
       <div className="p-10 text-center text-muted">
@@ -137,9 +161,10 @@ function EnrollmentsPage() {
 
           {showDropdown && (
             <div className="absolute right-0 mt-2 w-48 bg-canvas border border-border rounded-xl shadow-lg z-10 overflow-hidden">
+              
               <button
-                onClick={() => {
-                  exportToExcel();
+                onClick={async() => {
+                  await exportToExcel();
                   setShowDropdown(false);
                 }}
                 className="block w-full text-left px-4 py-3 hover:bg-canvas-alt transition-colors"
@@ -148,14 +173,25 @@ function EnrollmentsPage() {
               </button>
 
               <button
-                onClick={() => {
-                  exportToPDF();
+                onClick={async() => {
+                 await exportToPDF();
                   setShowDropdown(false);
                 }}
                 className="block w-full text-left px-4 py-3 hover:bg-canvas-alt transition-colors"
               >
                 Download PDF
               </button>
+
+              <button
+                onClick={() => {
+                  exportToCSV();
+                  setShowDropdown(false);
+                }}
+                className="block w-full text-left px-4 py-3 hover:bg-canvas-alt transition-colors"
+              >
+                Download CSV
+              </button>
+
             </div>
           )}
         </div>
