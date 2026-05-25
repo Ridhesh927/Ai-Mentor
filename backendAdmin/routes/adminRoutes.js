@@ -65,6 +65,6 @@ router.patch("/notifications/:id/read", protectAdmin, markNotificationRead);
 router.delete("/notifications/clear", protectAdmin, clearAllNotifications);
 
 //coures Report
-router.get("/coures-reports", getAllCouresReports);
+router.get("/coures-reports", protectAdmin, getAllCouresReports);
 
 export default router;
