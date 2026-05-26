@@ -1,9 +1,9 @@
 import express from "express";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit"; // 1️⃣ Import express-rate-limit
 import User from "../models/User.js";
 import { createNotification } from "../controllers/notificationController.js";
-// 1️⃣ Import the protect middleware safely
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -14,8 +14,19 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ✅ CREATE ORDER (2️⃣ Added 'protect' here)
-router.post("/create-order", protect, async (req, res) => {
+// 2️⃣ Configure the rate limiter for payment creations
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // Limit each IP to 3 request per windowMs
+  message: {
+    error: "Too many payment attempts from this IP. Please try again after 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ✅ CREATE ORDER (3️⃣ Injected paymentLimiter here)
+router.post("/create-order", protect, paymentLimiter, async (req, res) => {
     try {
         const { course } = req.body;
 
@@ -58,7 +69,7 @@ router.post("/create-order", protect, async (req, res) => {
     }
 });
 
-// ✅ VERIFY PAYMENT (2️⃣ Added 'protect' here)
+// ✅ VERIFY PAYMENT (We do not add paymentLimiter here so authorization verification isn't blocked accidentally)
 router.post("/verify", protect, async (req, res) => {
     try {
         const {
@@ -67,13 +78,12 @@ router.post("/verify", protect, async (req, res) => {
             razorpay_signature,
             courseId,
             courseTitle,
-            // ❌ REMOVED: userId from req.body to stop ID spoofing attacks
         } = req.body;
 
-        // 3️⃣ SECURE UPGRADE: Grab the user ID straight from the verified JWT token
+        // SECURE UPGRADE: Grab the user ID straight from the verified JWT token
         const userId = req.user.id;
 
-        // Validate request parameters (Checking verified userId instead of req.body)
+        // Validate request parameters
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !courseId || !userId) {
             return res.status(400).json({ success: false, error: "Missing required parameters" });
         }
@@ -88,7 +98,6 @@ router.post("/verify", protect, async (req, res) => {
 
         // Verify signature
         if (razorpay_signature === expectedSign) {
-            // Payment is successful, update user's purchased courses
             const user = await User.findByPk(userId);
 
             if (!user) {
