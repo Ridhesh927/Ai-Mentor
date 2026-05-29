@@ -15,7 +15,7 @@ AIVideo.init(
             allowNull: false,
         },
         lessonId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         celebrity: {
