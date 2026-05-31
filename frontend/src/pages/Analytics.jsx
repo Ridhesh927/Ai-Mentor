@@ -66,6 +66,14 @@ const Analytics = () => {
   const formatDateKey = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
+  const isPastDate = (dateKey) => {
+  const selected = new Date(dateKey);
+  selected.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return selected < today;
+};
+
   // Fetch courses and analytics
   useEffect(() => {
     const fetchData = async () => {
@@ -148,9 +156,16 @@ const Analytics = () => {
   };
 
   const attendance = calculateAttendance();
+  const isSelectedDatePast = selectedDate
+  ? isPastDate(selectedDate)
+  : false;
 
   const addTask = () => {
     if (!newTask.trim()) return;
+     if (isPastDate(selectedDate)) {
+    alert("Cannot add tasks to past dates");
+    return;
+    }
     const dateKey = selectedDate || formatDateKey(new Date());
     setTasks((prev) => ({
       ...prev,
@@ -164,6 +179,10 @@ const Analytics = () => {
 
   const updateTaskStatus = (index, status) => {
     if (!tasks[selectedDate]) return;
+      if (isPastDate(selectedDate)) {
+    alert("Past tasks cannot be modified");
+    return;
+  }
     setTasks((prev) => {
       const updated = [...prev[selectedDate]];
       updated[index].status = status;
@@ -173,6 +192,10 @@ const Analytics = () => {
 
   const deleteTask = (index) => {
     if (!tasks[selectedDate]) return;
+  if (isPastDate(selectedDate)) {
+    alert("Past tasks cannot be deleted");
+    return;
+  }
     const updated = [...tasks[selectedDate]];
     updated.splice(index, 1);
     setTasks({ ...tasks, [selectedDate]: updated });
@@ -777,6 +800,7 @@ const Analytics = () => {
 
                 <div className="flex flex-col sm:flex-row gap-2 mb-6">
                   <input
+                    disabled={isSelectedDatePast}
                     value={newTask}
                     onChange={(e) => setNewTask(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && addTask()}
@@ -785,13 +809,25 @@ const Analytics = () => {
                   />
 
                   <button
+                    disabled={isSelectedDatePast}
                     onClick={addTask}
-                    className="w-full sm:w-auto bg-[#ff6d34] hover:bg-[#ff6d34]/90 text-white px-4 py-3 rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap"
-                  >
+                   className={`w-full sm:w-auto px-4 py-3 rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap
+                    ${
+                    isSelectedDatePast
+                    ? "bg-gray-300 cursor-not-allowed text-white"
+                       : "bg-[#ff6d34] hover:bg-[#ff6d34]/90 text-white"
+                     }`}
+                    >
                     <Plus className="w-4 h-4" />
                     {t('analytics.add_btn')}
                   </button>
                 </div>
+                
+               {isSelectedDatePast && (
+                   <div className="mb-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm">
+                   This date is in the past. Tasks can be viewed but cannot be modified.
+                    </div>
+                   )}
 
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {(tasks[selectedDate] || []).length > 0 ? (
@@ -817,6 +853,7 @@ const Analytics = () => {
                         
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <select
+                            disabled={isSelectedDatePast}
                             value={task.status}
                             onChange={(e) => updateTaskStatus(i, e.target.value)}
                             className="bg-white dark:bg-gray-800 border border-[#CCCCCC] dark:border-gray-600 rounded-lg p-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#ff6d34] text-[#2D3436] dark:text-gray-300"
@@ -826,8 +863,13 @@ const Analytics = () => {
                             <option value="Completed">✅ Done</option>
                           </select>
                           <button
+                            disabled={isSelectedDatePast}
                             onClick={() => deleteTask(i)}
-                            className="text-gray-400 hover:text-red-500 transition p-1"
+                           className={`p-1 ${
+                           isSelectedDatePast
+                           ? "text-gray-300 cursor-not-allowed"
+                           : "text-gray-400 hover:text-red-500 transition"
+                           }`}
                           >
                             ✕
                           </button>
