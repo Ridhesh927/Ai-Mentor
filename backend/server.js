@@ -1,6 +1,5 @@
-// backend/server.js
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -36,7 +35,6 @@ import "./models/modelAssociations.js";
 import "./models/Contactmessage.js";
 import "./models/Payment.js";
 
-dotenv.config();
 
 import { validateEnv } from "./env-validator.js";
 validateEnv();
