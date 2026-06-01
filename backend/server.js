@@ -33,6 +33,7 @@ import "./models/Notification.js";
 import "./models/Report.js";
 import "./models/modelAssociations.js";
 import "./models/Contactmessage.js";
+import "./models/CourseFeedback.js";
 
 dotenv.config();
 

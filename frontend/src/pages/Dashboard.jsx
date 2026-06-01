@@ -24,6 +24,7 @@ import {
 import Preferences from "../components/Preferences";
 import API_BASE_URL, { apiFetch } from "../lib/api";
 import FloatingAssistant from "../components/common/FloatingAssistant";
+import CourseCardMeta from "../components/common/CourseCardMeta";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -454,12 +455,9 @@ const Dashboard = () => {
                       loading="lazy"
                     />
 
-                    {/* Rating */}
-                    <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded-full flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      <span className="text-xs text-white font-semibold">
-                        {course.rating}
-                      </span>
+                    {/* Rating & Reviews */}
+                    <div className="absolute bottom-2 right-2">
+                      <CourseCardMeta courseId={course.id} />
                     </div>
                   </div>
 
