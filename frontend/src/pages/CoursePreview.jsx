@@ -72,6 +72,7 @@ export default function CoursePreview() {
     const [trustSrc, setTrustSrc] = useState("/ui/trust-badge.png");
     const trustCandidatesRef = useRef([]);
     const trustIndexRef = useRef(0);
+    const [idempotencyKey, setIdempotencyKey] = useState(null);
     // fetch meta & learning (use API_BASE_URL)
     useEffect(() => {
         let cancelled = false;
@@ -226,6 +227,7 @@ const [metaRes, learnRes] = await Promise.all([
         const category = safeGet(courseMeta, "category", "");
         const level = safeGet(courseMeta, "level", "");
         const priceValue = safeGet(courseMeta, "priceValue", 0);
+        setIdempotencyKey(crypto.randomUUID());
         setSelectedCourse({
             id: Number(courseId),
             title,
@@ -301,6 +303,7 @@ const [metaRes, learnRes] = await Promise.all([
                         title: selectedCourse.title,
                         priceValue,
                     },
+                    idempotencyKey,
                 }),
             });
             const data = await res.json();
@@ -324,7 +327,6 @@ const [metaRes, learnRes] = await Promise.all([
         const priceValue = Number(selectedCourse.priceValue || 0);
 
         setIsPurchasing(true);
-        setIsPurchasing(true);
 
         // ✅ Load Razorpay script on demand
         const loaded = await loadRazorpayScript();
@@ -341,7 +343,14 @@ const [metaRes, learnRes] = await Promise.all([
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ course: { id: selectedCourse.id, priceValue } }),
+                body: JSON.stringify({ 
+                    course: { 
+                        id: selectedCourse.id, 
+                        title: selectedCourse.title, 
+                        priceValue 
+                    },
+                    idempotencyKey,
+                }),
             });
             const orderData = await res.json();
 
@@ -424,6 +433,7 @@ const [metaRes, learnRes] = await Promise.all([
             const rzp = new window.Razorpay(options);
             rzp.on("payment.failed", function (response) {
                 razorpayModalOpen.current = false;
+                 console.log(`[Payment] ❌ FAILED | Code: ${response.error.code} | Reason: ${response.error.description} | OrderId: ${response.error.metadata?.order_id}`);
                 toast.error("Payment failed: " + response.error.description);
                 setIsPurchasing(false);
             });

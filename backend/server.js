@@ -5,6 +5,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
 import { connectDB, sequelize } from "./config/db.js";
 
 // ================= ROUTES =================
@@ -33,7 +34,7 @@ import "./models/Notification.js";
 import "./models/Report.js";
 import "./models/modelAssociations.js";
 import "./models/Contactmessage.js";
-import "./models/CourseFeedback.js";
+import "./models/Payment.js";
 
 dotenv.config();
 
