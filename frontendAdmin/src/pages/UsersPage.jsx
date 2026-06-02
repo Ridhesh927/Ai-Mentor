@@ -519,7 +519,7 @@ console.log(usersResult.usersResult);
                   value={formData.password}
                   onChange={onFieldChange}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full h-12 px-5 rounded-2xl bg-canvas border border-border focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-hidden transition-all font-bold text-main"
                 />
               </div>
