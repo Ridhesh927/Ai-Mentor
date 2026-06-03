@@ -213,11 +213,19 @@ export const getCourseEnrollments = async (req, res) => {
       success: true,
       courseId: id,
       enrolledCount: enrolledUsers.length,
-      enrolledUsers: enrolledUsers.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-      })),
+      enrolledUsers: enrolledUsers.map((u) => {
+        // Surface when the user enrolled, using the purchaseDate stored on the
+        // matching purchasedCourses entry (set at purchase time).
+        const enrollment = (u.purchasedCourses || []).find(
+          (c) => Number(c.courseId) === Number(id)
+        );
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          enrolledAt: enrollment?.purchaseDate ?? null,
+        };
+      }),
     });
   } catch (error) {
     console.error("GET COURSE ENROLLMENTS ERROR:", error.message);
