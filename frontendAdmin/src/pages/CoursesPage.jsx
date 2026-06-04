@@ -167,6 +167,16 @@ function CoursesPage() {
 
   const [builderCourse, setBuilderCourse] = useState(null);
 
+  // ── Enrollment Modal ──────────────────────────────────────────────────────
+const [enrollmentModal, setEnrollmentModal] = useState({
+  open: false,
+  courseId: null,
+  courseTitle: "",
+  enrolledUsers: [],
+  enrolledCount: 0,
+  loading: false,
+});
+
   // ── Filter panel toggle ───────────────────────────────────────────────────
   const [showFilters, setShowFilters] = useState(false);
 
@@ -464,6 +474,34 @@ const closeDeleteModal = useCallback(() => {
 }, [deleteModal.isDeleting]);
 
 /**
+ * Opens enrollment details modal for a course.
+ */
+const handleViewEnrollments = useCallback(async (course) => {
+  // Open modal immediately with loading state
+  setEnrollmentModal({
+    open: true,
+    courseId: course.id,
+    courseTitle: course.title,
+    enrolledUsers: [],
+    enrolledCount: 0,
+    loading: true,
+  });
+
+  try {
+    const data = await callApi(`/admin/courses/${course.id}/enrollments`);
+    setEnrollmentModal((prev) => ({
+      ...prev,
+      enrolledUsers: data.enrolledUsers || [],
+      enrolledCount: data.enrolledCount || 0,
+      loading: false,
+    }));
+  } catch (err) {
+    showToast("Failed to load enrollments: " + err.message, "error");
+    setEnrollmentModal((prev) => ({ ...prev, loading: false }));
+  }
+}, []);
+
+/**
  * Status badge color helper.
  */
 const getRowClass = (status) => {
@@ -665,15 +703,22 @@ return (
                       {course.title}
                     </div>
                     <div className="text-muted text-[10px] uppercase tracking-tighter mt-0.5 flex gap-2 items-center">
-                      <span>ID: {course.id}</span>
-                      <span>•</span>
-                      <button 
-                        onClick={() => setBuilderCourse(course)}
-                        className="text-purple-500 hover:text-purple-600 font-bold transition-colors"
-                      >
-                        Builder
-                      </button>
-                    </div>
+                    <span>ID: {course.id}</span>
+                    <span>•</span>
+                    <button
+                      onClick={() => setBuilderCourse(course)}
+                      className="text-purple-500 hover:text-purple-600 font-bold transition-colors"
+                    >
+                      Builder
+                    </button>
+                    <span>•</span>
+                    <button
+                      onClick={() => handleViewEnrollments(course)}
+                      className="text-teal-500 hover:text-teal-600 font-bold transition-colors"
+                    >
+                      Students
+                    </button>
+                  </div>
                   </td>
                   <td className="pr-4">
                     <span className="px-2.5 py-1 rounded-lg bg-canvas-alt border border-border text-[11px] font-bold uppercase tracking-tight text-muted">
@@ -866,6 +911,77 @@ return (
           course={builderCourse}
           onClose={() => setBuilderCourse(null)}
         />
+      )}
+
+      {/* ── Enrollment Details Modal ─────────────────────────────────────────── */}
+      {enrollmentModal.open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-border w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-teal-500/5 to-transparent">
+              <div>
+                <h3 className="text-lg font-bold text-main tracking-tight uppercase">
+                  Enrolled Students
+                </h3>
+                <p className="text-xs text-muted mt-0.5 font-medium truncate max-w-[300px]">
+                  {enrollmentModal.courseTitle}
+                </p>
+              </div>
+              <button
+                onClick={() => setEnrollmentModal((prev) => ({ ...prev, open: false }))}
+                className="w-9 h-9 rounded-xl border border-border flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Total count badge */}
+            <div className="px-6 py-3 border-b border-border bg-canvas-alt/20 flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted">
+                Total Enrolled:
+              </span>
+              <span className="bg-teal-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full">
+                {enrollmentModal.enrolledCount} students
+              </span>
+            </div>
+
+            {/* Students list */}
+            <div className="max-h-[400px] overflow-y-auto">
+              {enrollmentModal.loading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-50">
+                  <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs font-black uppercase tracking-widest text-muted">Loading students...</p>
+                </div>
+              ) : enrollmentModal.enrolledUsers.length > 0 ? (
+                <div className="divide-y divide-border">
+                  {enrollmentModal.enrolledUsers.map((user, index) => (
+                    <div key={user.id} className="px-6 py-4 flex items-center gap-3 hover:bg-canvas-alt transition-colors">
+                      <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center font-black text-[11px] uppercase shrink-0">
+                        {user.name?.charAt(0) || "?"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-main text-sm truncate">{user.name}</p>
+                        <p className="text-muted text-[11px] truncate">{user.email}</p>
+                      </div>
+                      <span className="text-[10px] font-black text-muted uppercase tracking-widest shrink-0">
+                        #{index + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-40">
+                  <div className="w-12 h-12 rounded-2xl bg-canvas-alt border border-border flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-muted" />
+                  </div>
+                  <p className="text-sm font-bold text-muted">No students enrolled yet</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
       )}
     </>
   );

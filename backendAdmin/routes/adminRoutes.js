@@ -6,6 +6,7 @@ import {
   deleteAdmin,
   logoutAdmin,
   getAllAdmins,
+  updateAdminStatus,
 } from "../controllers/authController.js";
 import {
   getAllCourses,
@@ -66,6 +67,7 @@ router.delete("/users/:id", protectAdmin, superAdminOnly, deleteUser);
 router.get("/reports", protectAdmin, getAllReports);
 router.get("/discussions", protectAdmin, getAllDiscussions);
 router.get("/admins", protectAdmin, getAllAdmins);
+router.patch("/admins/:id/status", protectAdmin, superAdminOnly, updateAdminStatus);
 
 // Notifications
 router.get("/notifications", protectAdmin, getAdminNotifications);

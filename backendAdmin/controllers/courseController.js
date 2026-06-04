@@ -1,4 +1,4 @@
-import { Course, AdminNotification, Module, Lesson } from "../models/index.js";
+import { Course, AdminNotification, Module, Lesson, User } from "../models/index.js";
 import { Op } from "sequelize";
 
 // Valid status values
@@ -204,7 +204,13 @@ export const deleteCourseHard = async (req, res) => {
 export const getCourseEnrollments = async (req, res) => {
   try {
     const { id } = req.params;
-    const { User } = await import("../models/index.js");
+
+    // Validate the course exists before reporting enrollments, so a bad/unknown
+    // id returns 404 instead of a misleading empty enrollment list.
+    const course = await Course.findByPk(id);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
 
     const allUsers = await User.findAll({
       attributes: ["id", "name", "email", "purchasedCourses"],
@@ -219,11 +225,19 @@ export const getCourseEnrollments = async (req, res) => {
       success: true,
       courseId: id,
       enrolledCount: enrolledUsers.length,
-      enrolledUsers: enrolledUsers.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-      })),
+      enrolledUsers: enrolledUsers.map((u) => {
+        // Surface when the user enrolled, using the purchaseDate stored on the
+        // matching purchasedCourses entry (set at purchase time).
+        const enrollment = (u.purchasedCourses || []).find(
+          (c) => Number(c.courseId) === Number(id)
+        );
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          enrolledAt: enrollment?.purchaseDate ?? null,
+        };
+      }),
     });
   } catch (error) {
     console.error("GET COURSE ENROLLMENTS ERROR:", error.message);
