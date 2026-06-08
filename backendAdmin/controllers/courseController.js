@@ -1,5 +1,5 @@
 import { Course, AdminNotification, Module, Lesson, User } from "../models/index.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 // Valid status values
 const VALID_STATUSES = ["published", "disabled", "deleted"];
@@ -138,13 +138,9 @@ export const deleteCourseHard = async (req, res) => {
     const { User } = await import("../models/index.js");
 
     // Check for enrolled users
-    const allUsers = await User.findAll({
+    const enrolledUsers = await User.findAll({
+      where: Sequelize.literal(`"purchasedCourses"::jsonb @> '[{"courseId": ${Number(id)}}]'`),
       attributes: ["id", "name", "purchasedCourses"],
-    });
-
-    const enrolledUsers = allUsers.filter((user) => {
-      const purchased = user.purchasedCourses || [];
-      return purchased.some((c) => Number(c.courseId) === Number(id));
     });
 
     // If force flag is not set and there are enrolled users, warn admin
@@ -223,14 +219,9 @@ export const getCourseEnrollments = async (req, res) => {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
-    const allUsers = await User.findAll({
+    const enrolledUsers = await User.findAll({
+      where: Sequelize.literal(`"purchasedCourses"::jsonb @> '[{"courseId": ${Number(id)}}]'`),
       attributes: ["id", "name", "email", "purchasedCourses"],
-    });
-
-    // Filter users enrolled in this course
-    const enrolledUsers = allUsers.filter((user) => {
-      const purchased = user.purchasedCourses || [];
-      return purchased.some((c) => Number(c.courseId) === Number(id));
     });
 
     const totalEnrolled = enrolledUsers.length;
@@ -238,7 +229,6 @@ export const getCourseEnrollments = async (req, res) => {
 
     // Apply in-memory pagination on the filtered list
     const paginatedUsers = enrolledUsers.slice(offset, offset + limit);
-
     res.status(200).json({
       success: true,
       courseId: id,
