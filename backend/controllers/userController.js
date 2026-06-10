@@ -461,15 +461,7 @@ const updateUserProfile = async (req, res) => {
 
     // Avatar Upload Handling
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "user_avatars",
-        public_id: `user_${user.id}`,
-        overwrite: true,
-      });
-
-      user.avatar_url = result.secure_url;
-
-      fs.unlinkSync(req.file.path);
+  user.avatar_url = `/uploads/${req.file.filename}`;
     }
 
     // Update text fields
@@ -620,17 +612,14 @@ const completeProfile = async (req, res) => {
     }
 
     // Avatar upload via Cloudinary (required if not already set)
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "user_avatars",
-        public_id: `user_${user.id}`,
-        overwrite: true,
-      });
-      user.avatar_url = result.secure_url;
-      fs.unlinkSync(req.file.path);
-    } else if (!user.avatar_url) {
-      return res.status(400).json({ message: "Profile photo is required" });
-    }
+    // Store image locally instead of Cloudinary
+if (req.file) {
+  user.avatar_url = `/uploads/${req.file.filename}`;
+} else if (!user.avatar_url) {
+  return res.status(400).json({
+    message: "Profile photo is required",
+  });
+}
 
     user.isProfileComplete = true; // Temporary flag to trigger save check
     await user.save();
@@ -667,9 +656,14 @@ const completeProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("COMPLETE PROFILE ERROR:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+
+  res.status(500).json({
+    success: false,
+    message: error.message,
+    error: error,
+  });
+}
+}
 
 // EXPORTS
 export {

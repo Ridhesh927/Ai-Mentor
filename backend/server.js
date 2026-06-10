@@ -1,9 +1,9 @@
-import "dotenv/config";
+// backend/server.js
 import express from "express";
+import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-
 
 import { connectDB, sequelize } from "./config/db.js";
 
@@ -21,10 +21,9 @@ import certificateRoutes from "./routes/certificateRoutes.js";
 import paymentRoutes from "./routes/payment.js";
 import razorpayRoutes from "./routes/razorpay.js";
 import preferenceRoutes from "./routes/preferenceRoutes.js";
-import contactUsRoutes from "./routes/contactus.js"; // ✅ fixed import
+import contactUsRoutes from "./routes/contactus.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import docsRoutes from "./routes/docsRoutes.js";
-import calendarTaskRoutes from "./routes/calendarTaskRoutes.js";
 import helmet from "helmet";
 import chatRoutes from "./routes/chatRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
@@ -35,8 +34,8 @@ import "./models/Notification.js";
 import "./models/Report.js";
 import "./models/modelAssociations.js";
 import "./models/Contactmessage.js";
-import "./models/Payment.js";
 
+dotenv.config();
 
 import { validateEnv } from "./env-validator.js";
 validateEnv();
@@ -55,11 +54,28 @@ app.use(
   })
 );
 
+// ================= SECURE CORS =================
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim())
+  : [];
+
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL || "http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      // Allow requests without origin (Postman, mobile apps, curl)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.error(`❌ Blocked by CORS: ${origin}`);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-  }),
+  })
 );
 
 // ================= STATIC FILES =================
@@ -85,8 +101,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/certificate", certificateRoutes);
 app.use("/api/preferences", preferenceRoutes);
-app.use("/api/contactus", contactUsRoutes); // ✅ added route
-app.use("/api/calendar-tasks", calendarTaskRoutes);
+app.use("/api/contactus", contactUsRoutes);
 app.use("/api/course-reports", reportRoutes);
 app.use("/api/docs", docsRoutes);
 app.use("/api/chat", chatRoutes);
@@ -121,13 +136,16 @@ const startServer = async () => {
     const syncOptions = isDevelopment ? { alter: true } : {};
 
     await sequelize.sync(syncOptions);
+
     console.log(
       isDevelopment
         ? "✅ Database models synced with schema auto-alter enabled (development)"
-        : "✅ Database models synced",
+        : "✅ Database models synced"
     );
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log("✅ Allowed Origins:", allowedOrigins);
     });
   } catch (error) {
     console.error("❌ Server failed:", error);

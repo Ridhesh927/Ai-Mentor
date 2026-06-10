@@ -4,13 +4,11 @@ import { Star, X, BookOpen, Search, ChevronLeft, ChevronRight } from "lucide-rea
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../lib/api";
-import { loadRazorpayScript } from "../lib/loadRazorPay";
 import { useTranslation } from "react-i18next";
 import ReportModal from "../components/common/ReportModal";
 import toast from "react-hot-toast";
 import { AlertTriangle } from "lucide-react";
 import FloatingAssistant from "../components/common/FloatingAssistant";
-import CourseCardMeta from "../components/common/CourseCardMeta";
 
 const CoursesPage = () => {
     const { t } = useTranslation();
@@ -41,7 +39,6 @@ const CoursesPage = () => {
 
     const [filters, setFilters] = useState({ category: [], level: [], price: [] });
     const [showFilters, setShowFilters] = useState(false);
-    const [idempotencyKey, setIdempotencyKey] = useState(null);
 
     const toggleFilter = (field, value) => {
         setFilters(prev => {
@@ -386,7 +383,6 @@ const CoursesPage = () => {
                         title: selectedCourse.title,
                         priceValue,
                     },
-                    idempotencyKey: crypto.randomUUID(),
                 }),
             });
             const data = await res.json();
@@ -415,16 +411,13 @@ const CoursesPage = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-            body: JSON.stringify({
-            course: {
-                id: selectedCourse.id,
-                title: selectedCourse.title,
-                priceValue,
-            },
-            idempotencyKey,
-            }),
-                        });
-           
+                body: JSON.stringify({
+                    course: {
+                        id: selectedCourse.id,
+                        priceValue,
+                    },
+                }),
+            });
             const orderData = await res.json();
 
             if (!orderData.orderId) {
@@ -947,14 +940,21 @@ const CoursesPage = () => {
                                         <div className="relative h-32 sm:h-40">
 
                                             <img
-                                                src={course.image}
-                                                className="w-full h-full object-cover"
-                                                alt={course.title}
-                                                loading="lazy"
-                                            />
-                                            <div className="absolute bottom-2 right-2">
-                                                <CourseCardMeta courseId={course.id} />
-                                            </div>
+    src={
+        course.title === "React Fundamentals"
+            ? "/AI_Tutor_New_UI/Dashboard/react_fundamentals_logo.png"
+            : course.title === "Python For AI"
+            ? "/AI_Tutor_New_UI/Dashboard/python_for_ai_logo.png"
+            : course.title === "AI Ethics & Bias"
+            ? "/AI_Tutor_New_UI/Dashboard/data_analytics.png"
+            : course.title === "MongoDB Fundamentals"
+            ? "/AI_Tutor_New_UI/Dashboard/MongoDB.png"
+            : "/AI_Tutor_New_UI/Dashboard/logo.png"
+    }
+    className="w-full h-full object-cover"
+    alt={course.title}
+    loading="lazy"
+/>
                                         </div>
 
                                         <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between">
@@ -1045,14 +1045,25 @@ const CoursesPage = () => {
                                     >
                                         <div className="relative h-32 sm:h-40">
 
-                                            <img
-                                                src={course.image}
-                                                className="w-full h-full object-cover"
-                                                alt={course.title}
-                                                loading="lazy"
-                                            />
-                                            <div className="absolute bottom-2 right-2">
-                                                <CourseCardMeta courseId={course.id} />
+                                          <img
+    src={
+        course.title === "React Fundamentals"
+            ? "/AI_Tutor_New_UI/Dashboard/react_fundamentals_logo.png"
+            : course.title === "Python For AI"
+            ? "/AI_Tutor_New_UI/Dashboard/python_for_ai_logo.png"
+            : course.title === "AI Ethics & Bias"
+            ? "/AI_Tutor_New_UI/Dashboard/data_analytics.png"
+            : course.title === "MongoDB Fundamentals"
+            ? "/AI_Tutor_New_UI/Dashboard/MongoDB.png"
+            : "/AI_Tutor_New_UI/Dashboard/logo.png"
+    }
+    className="w-full h-full object-cover"
+    alt={course.title}
+    loading="lazy"
+/>
+                                            <div className="absolute bottom-3 right-3 bg-white text-black px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow">
+                                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                                {course.rating}
                                             </div>
                                         </div>
 
@@ -1082,7 +1093,6 @@ const CoursesPage = () => {
                                                     onClick={() => {
                                                         if (!isEnrolled) {
                                                             setSelectedCourse(course);
-                                                            setIdempotencyKey(crypto.randomUUID());
                                                             setShowEnrollPopup(true);
                                                         }
                                                     }}
@@ -1115,7 +1125,7 @@ const CoursesPage = () => {
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white w-full max-w-md rounded-2xl p-4 sm:p-6 relative mx-4">
                         <button
-                            onClick={() => { setShowEnrollPopup(false); setIdempotencyKey(null); }}
+                            onClick={() => setShowEnrollPopup(false)}
                             className="absolute top-4 right-4"
                         >
                             <X />
